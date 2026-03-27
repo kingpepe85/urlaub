@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    String        @id @default(cuid())
+  name                  String
+  email                 String        @unique
+  password              String
+  urlaubsanspruchJahr   Int           @default(30)
+  kinderkrankentageJahr Int           @default(15)
+  hrEmail               String        @default("backoffice+hr@byteways.de")
+  smtpHost              String?
+  smtpPort              Int?
+  smtpUser              String?
+  smtpPassword          String?
+  smtpFrom              String?
+  onboardingComplete    Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+
+  abwesenheiten Abwesenheit[]
+  resturlaube   Resturlaub[]
+  vorlagen      Vorlage[]
+}
+
+model Abwesenheit {
+  id           String   @id @default(cuid())
+  userId       String
+  typ          String
+  beginn       DateTime
+  ende         DateTime
+  tage         Int
+  status       String   @default("entwurf")
+  notiz        String?
+  nachgetragen Boolean  @default(false)
+  erstelltAm   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Resturlaub {
+  id     String @id @default(cuid())
+  userId String
+  jahr   Int
+  tage   Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jahr])
+}
+
+model Vorlage {
+  id      String @id @default(cuid())
+  userId  String
+  typ     String
+  betreff String
+  inhalt  String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, typ])
+}
